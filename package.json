@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node main.js",
+    "data": "node get_data.js",
     "start": "node main.js"
   }
 }
