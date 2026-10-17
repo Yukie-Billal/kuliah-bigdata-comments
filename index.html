@@ -1,11 +1,388 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analisis Komentar YouTube Dengan MapReduce - Evaluasi Kebijakan Pidato Presiden</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>HELLO WORLD</h1>
+
+  <div class="container">
+    <header>
+      <div class="header-title">
+        <span>Topik:</span>Analisis Komentar YouTube Dengan MapReduce Dalam Menerjemahkan Respon Netizen Pidato Presiden Menjadi Evaluasi Kebijakan Publik.
+      </div>
+      <div class="header-subtitle">
+        Visualisasi Pipeline MapReduce (Map &rarr; Shuffle &amp; Sort &rarr; Reduce) dari Opini Netizen Kolom Komentar YouTube untuk Evaluasi Efektivitas Kebijakan Pidato Presiden.
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      
+      <!-- KOLOM KIRI: KONTROL DATA & KONFIGURASI API (MINIMAL & PRAKTIS) -->
+      <aside>
+        
+        <div class="card">
+          <div class="card-title">
+            <h1>Configs &amp; Sumber Data</h1>
+          </div>
+
+          <div class="form-group">
+            <label for="api-key">Google API Key (YouTube Data API v3)</label>
+            <input type="password" id="api-key" class="form-control" placeholder="Masukkan Google API Key...">
+          </div>
+
+          <div class="form-group">
+            <label for="video-input">Link YouTube / Video ID Pidato</label>
+            <input type="text" id="video-input" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
+          </div>
+
+          <div class="form-group">
+            <label for="limit-select">Jumlah Komentar Diambil</label>
+            <select id="limit-select" class="form-control">
+              <option value="150">150 Komentar</option>
+              <option value="500">500 Komentar</option>
+              <option value="1000">1.000 Komentar</option>
+              <option value="all">Semua Komentar (Pagination)</option>
+            </select>
+          </div>
+
+          <!-- Progress Bar Pagination Realtime -->
+          <div id="progress-box" class="progress-container">
+            <div class="progress-bar-bg">
+              <div id="progress-bar-fill" class="progress-bar-fill"></div>
+            </div>
+            <div class="progress-text">
+              <span id="progress-status-text">Mengambil komentar...</span>
+              <span id="progress-counter-text">0 / 0</span>
+            </div>
+          </div>
+
+          <!-- Status badge info/error -->
+          <div id="api-status" class="status-badge info">
+            Siap memproses data. Gunakan data offline dari direktori data/ atau masukkan Google API Key.
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem;">
+            <button id="btn-fetch" class="btn btn-primary">
+              Ambil Komentar YouTube API
+            </button>
+            <button id="btn-stop" class="btn btn-danger" style="display: none;">
+              Hentikan Penarikan Data
+            </button>
+            <button id="btn-load-csv" class="btn btn-secondary">
+              Gunakan Data Offline (CSV)
+            </button>
+            
+            <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+            <button id="btn-upload-csv" class="btn btn-outline">
+              Buka File CSV Lokal...
+            </button>
+          </div>
+
+          <hr style="border: 0; border-top: 1.5px solid #e2e8f0; margin: 1rem 0;">
+
+          <!-- TOMBOL EKSEKUSI UTAMA (LANGSUNG EVALUASI KEBIJAKAN) -->
+          <button id="btn-run-mr" class="btn btn-action" style="font-size: 0.95rem; padding: 0.75rem;">
+            &rsaquo; Eksekusi MapReduce
+          </button>
+        </div>
+
+      </aside>
+
+      <!-- KOLOM KANAN: NAVIGASI TABS & KONTEN -->
+      <main>
+        
+        <!-- TABS NAVIGASI UTAMA -->
+        <div class="main-tabs">
+          <button class="tab-btn active" id="tab-btn-dashboard" data-tab="tab-dashboard">
+            Dashboard Evaluasi Kebijakan
+          </button>
+          <button class="tab-btn" id="tab-btn-keywords" data-tab="tab-keywords">
+            Kelola Kata Kunci &amp; Leksikon
+          </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 1: DASHBOARD EVALUASI KEBIJAKAN            -->
+        <!-- ============================================== -->
+        <div id="tab-dashboard" class="tab-pane active">
+          
+          <!-- Baris Metrik Eksekusi MapReduce -->
+          <div class="metrics-row">
+            <div class="metric-card">
+              <div class="metric-label">Total Komentar</div>
+              <div id="metric-input-count" class="metric-value">0</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Intermediate Pairs</div>
+              <div id="metric-intermediate-count" class="metric-value">0</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Sektor / Key Terpetakan</div>
+              <div id="metric-unique-keys" class="metric-value">0</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Durasi MapReduce</div>
+              <div id="metric-duration" class="metric-value">0 ms</div>
+            </div>
+          </div>
+
+          <!-- SUB-PILLS UNTUK MEMILIH TAMPILAN EVALUASI -->
+          <div class="view-pills">
+            <span class="view-pills-label">Tampilan Evaluasi:</span>
+            <button class="view-pill-btn active" data-job="policyEvaluation">Pemetaan Sektor Kebijakan (Utama)</button>
+            <button class="view-pill-btn" data-job="sentimentAnalysis">Sentimen Respon Netizen</button>
+            <button class="view-pill-btn" data-job="aspirasiWordCount">Word Count Tuntutan Rakyat</button>
+          </div>
+
+          <!-- KARTU: HASIL VISUALISASI CHART & TABEL REDUCE -->
+          <div class="card">
+            <div class="card-title">
+              <span id="chart-title">Visualisasi &amp; Hasil Agregasi Reduce</span>
+              <span id="data-source-label" class="badge">Data Offline CSV</span>
+            </div>
+            
+            <div class="chart-wrapper" style="margin-bottom: 1.5rem;">
+              <canvas id="result-chart"></canvas>
+            </div>
+
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 60px;">No</th>
+                    <th>Sektor / Kata Kunci (Key)</th>
+                    <th>Hasil Agregasi (Reduced Value &amp; Dukungan Netizen)</th>
+                  </tr>
+                </thead>
+                <tbody id="reduce-table-body">
+                  <!-- Diisi dinamis oleh JavaScript -->
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-top: 0.75rem; display: flex; justify-content: flex-end;">
+              <button id="btn-export-csv" class="btn btn-outline" style="width: auto; padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+                Unduh Dataset ke File CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- KARTU: SAMPEL KOMENTAR MENTAH & KATA KUNCI TERDETEKSI -->
+          <div class="card">
+            <div class="card-title">
+              <span>Input Komentar Netizen &amp; Ekstraksi Kata Kunci</span>
+              <span class="badge">Input Dataset</span>
+            </div>
+            <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.75rem;">
+              Setiap komentar netizen di-scan oleh Mapper untuk mencocokkan kata kunci sektor kebijakan atau polaritas leksikon sentimen:
+            </p>
+            <div id="raw-data-preview" class="raw-container">
+              <!-- Diisi dinamis oleh JavaScript -->
+            </div>
+            
+            <!-- Notice & Toggle Button -->
+            <div id="comments-pagination-bar" style="margin-top: 0.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+              <span id="comments-count-notice" style="font-size: 0.82rem; color: #475569; font-weight: 600;">
+                Menampilkan 5 komentar pertama.
+              </span>
+              <button id="btn-toggle-all-comments" class="btn btn-outline" style="width: auto; padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                Tampilkan Seluruh Komentar
+              </button>
+            </div>
+          </div>
+
+          <!-- KARTU: ALUR INTERNAL PIPELINE MAPREDUCE -->
+          <div class="card">
+            <div class="card-title">
+              <span>Alur Internal Pipeline MapReduce</span>
+            </div>
+
+            <!-- Step 1: Map Phase -->
+            <div style="margin-bottom: 1.25rem;">
+              <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>1. Map Phase: Intermediate Key-Value Pairs</span>
+                <span class="badge">emit(key, value)</span>
+              </div>
+              <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">
+                Mapper memancarkan (emit) pasangan [Key, Value] untuk setiap komentar:
+              </p>
+              <div id="map-output-preview" class="chip-container">
+                <!-- Diisi dinamis oleh JavaScript -->
+              </div>
+              <div id="map-chip-notice" style="font-size: 0.78rem; color: #64748b; margin-top: 0.35rem;"></div>
+            </div>
+
+            <!-- Step 2: Shuffle & Sort Phase -->
+            <div>
+              <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>2. Shuffle &amp; Sort Phase: Grouping by Key</span>
+                <span class="badge">Key &rarr; [Values...]</span>
+              </div>
+              <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">
+                Framework mengelompokkan semua value dengan key yang sama sebelum dikirim ke Reducer:
+              </p>
+              <div id="shuffle-output-preview" class="shuffle-container">
+                <!-- Diisi dinamis oleh JavaScript -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- KARTU: KODE MAPPER & REDUCER -->
+          <div class="card">
+            <div class="card-title">
+              <span>Inspeksi Logika Algoritma (Code)</span>
+              <span id="job-title" class="badge">Pemetaan Sektor Evaluasi Kebijakan Publik</span>
+            </div>
+            <p id="job-desc" style="font-size: 0.85rem; color: #475569; margin-bottom: 0.75rem;">
+              Deskripsi analisis...
+            </p>
+            <div class="code-inspector-vertical">
+              <div class="code-box">
+                <div class="code-box-header">Fungsi Mapper: map(item, emit)</div>
+                <pre><code id="code-map">// Kode Mapper</code></pre>
+              </div>
+              <div class="code-box">
+                <div class="code-box-header">Fungsi Reducer: reduce(key, values)</div>
+                <pre><code id="code-reduce">// Kode Reducer</code></pre>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 2: KELOLA KATA KUNCI & LEKSIKON (CRUD)     -->
+        <!-- ============================================== -->
+        <div id="tab-keywords" class="tab-pane">
+          
+          <div id="toast-msg" class="toast-msg"></div>
+
+          <!-- Action bar -->
+          <div class="card" style="padding: 1rem; margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+              <div>
+                <strong style="font-size: 1rem;">Manajemen Kata Kunci &amp; Leksikon MapReduce</strong>
+                <p style="font-size: 0.82rem; color: #475569; margin-top: 0.2rem;">
+                  Tambah, edit, atau hapus kata kunci secara langsung di browser tanpa menyentuh kode. Perubahan disimpan otomatis di local storage.
+                </p>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button id="btn-reset-keywords" class="btn btn-outline" style="border-color: #dc2626; color: #dc2626; padding: 0.5rem 0.85rem; font-size: 0.82rem;">
+                  Reset ke Default Bawaan
+                </button>
+                <button id="btn-apply-and-run" class="btn btn-action" style="padding: 0.5rem 1rem; font-size: 0.82rem;">
+                  Terapkan &amp; Eksekusi Ulang
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bagian 1: Kustomisasi Sektor Kebijakan Publik -->
+          <div class="card">
+            <div class="card-title">
+              <span>Kata Kunci 7 Sektor Kebijakan Publik</span>
+              <span class="badge" style="background:#eff6ff; color:#1d4ed8;">Pemetaan Kebijakan</span>
+            </div>
+            <p class="dict-desc">
+              Kata dan frasa di bawah ini digunakan oleh Mapper untuk mengelompokkan aspirasi rakyat ke dalam sektor prioritas pemerintah. Klik tombol &times; pada kata untuk menghapus:
+            </p>
+
+            <!-- Form Tambah Kata Kunci ke Sektor -->
+            <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem;">
+              <strong style="font-size: 0.85rem; color: #0f172a; display: block; margin-bottom: 0.4rem;">+ Tambah Kata Kunci ke Sektor Kebijakan:</strong>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <select id="crud-sector-select" class="form-control" style="flex: 1.2; min-width: 200px; padding: 0.45rem 0.6rem; font-size: 0.82rem;">
+                  <!-- Diisi dinamis -->
+                </select>
+                <input type="text" id="crud-sector-word-input" class="form-control" placeholder="Ketik kata/frasa baru (misal: 'subsidi pupuk', 'ikn')..." style="flex: 2; min-width: 200px; padding: 0.45rem 0.6rem; font-size: 0.82rem;">
+                <button id="btn-add-sector-word" class="btn btn-primary" style="width: auto; padding: 0.45rem 1rem; font-size: 0.82rem;">
+                  + Tambah Kata
+                </button>
+              </div>
+            </div>
+
+            <!-- Grid Sektor Kebijakan -->
+            <div id="crud-sectors-container" class="sector-grid">
+              <!-- Diisi dinamis oleh JavaScript -->
+            </div>
+          </div>
+
+          <!-- Bagian 2: Kustomisasi Leksikon Sentimen Publik -->
+          <div class="card">
+            <div class="card-title">
+              <span>Leksikon Sentimen Respon Netizen</span>
+              <span class="badge" style="background:#f0fdf4; color:#166534;">Positif vs Negatif</span>
+            </div>
+            <p class="dict-desc">
+              Kamus leksikon yang digunakan Mapper untuk menghitung sentimen respon publik (Apresiasi/Harapan vs Kritik/Keluhan).
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <!-- Kolom Positif -->
+              <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0.75rem;">
+                <div class="dict-title" style="color: #166534; justify-content: space-between;">
+                  <span>Leksikon Positif (+)</span>
+                  <span id="crud-pos-count" class="badge" style="background:#dcfce7; color:#166534;">0 Kata</span>
+                </div>
+                <div id="crud-pos-container" class="word-cloud-box" style="margin-top: 0.5rem; max-height: 220px;">
+                  <!-- Diisi dinamis -->
+                </div>
+                <div class="crud-inline-form">
+                  <input type="text" id="crud-pos-input" placeholder="Tambah kata positif baru...">
+                  <button id="btn-add-pos-word">+ Tambah</button>
+                </div>
+              </div>
+
+              <!-- Kolom Negatif -->
+              <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0.75rem;">
+                <div class="dict-title" style="color: #991b1b; justify-content: space-between;">
+                  <span>Leksikon Negatif (-)</span>
+                  <span id="crud-neg-count" class="badge" style="background:#fee2e2; color:#991b1b;">0 Kata</span>
+                </div>
+                <div id="crud-neg-container" class="word-cloud-box" style="margin-top: 0.5rem; max-height: 220px;">
+                  <!-- Diisi dinamis -->
+                </div>
+                <div class="crud-inline-form">
+                  <input type="text" id="crud-neg-input" placeholder="Tambah kata negatif baru...">
+                  <button id="btn-add-neg-word">+ Tambah</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bagian 3: Kustomisasi Stop Words Bahasa Indonesia -->
+          <div class="card">
+            <div class="card-title">
+              <span>Filter Stop Words Bahasa Indonesia</span>
+              <span id="crud-stopwords-count" class="badge" style="background:#f1f5f9; color:#475569;">0 Kata</span>
+            </div>
+            <p class="dict-desc">
+              Kata-kata penghubung dan kata tugas yang dibuang oleh Mapper Word Count agar hasil analisis benar-benar fokus pada isu/tuntutan substantif rakyat:
+            </p>
+            <div id="crud-stopwords-container" class="word-cloud-box" style="max-height: 180px;">
+              <!-- Diisi dinamis -->
+            </div>
+            <div class="crud-inline-form" style="max-width: 400px; margin-top: 0.75rem;">
+              <input type="text" id="crud-stopword-input" placeholder="Tambah stopword baru yang ingin dibuang...">
+              <button id="btn-add-stopword">+ Tambah Stopword</button>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Script Modules -->
+  <script src="sample-data.js"></script>
+  <script src="mapreduce.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

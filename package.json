@@ -1,9 +1,0 @@
-{
-  "name": "youtube-cleaner",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "data": "node get_data.js",
-    "start": "node main.js"
-  }
-}
