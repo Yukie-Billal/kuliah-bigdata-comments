@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 const videoId = "CM53UkHLQKc";
-const maxResults = "1";
+const maxResults = "100";
 const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet,replies&videoId=${videoId}&maxResults=${maxResults}&order=time&textFormat=plainText&key=${APIKEY}`;
 
-const OUTPUT_FILE = "./cleaned_comments.csv";
+const OUTPUT_FILE = "./data/chunk_";
 
 // Membaca file CSV
 async function readFile(filePath) {
@@ -41,6 +41,11 @@ function cleanseComment(comment) {
     return (
         comment
             // Decode HTML entities umum
+            // Hapus emoji dan simbol Unicode terkait
+            .replace(/[\p{Extended_Pictographic}\p{Emoji_Component}]/gu, "")
+
+            // Hapus karakter mojibake yang umum
+            .replace(/[âðÃï�]/g, "")
             .replace(/&amp;/gi, "&")
             .replace(/&lt;/gi, "<")
             .replace(/&gt;/gi, ">")
@@ -57,6 +62,18 @@ function cleanseComment(comment) {
 
             // Hapus mention @username
             .replace(/(^|\s)@[\w.-]+/g, "$1")
+
+            // Hapus variation selector dan zero-width characters
+            .replace(/[\uFE0E\uFE0F\u200B-\u200D\u2060\uFEFF]/g, "")
+
+            // Rapikan whitespace setiap baris
+            .replace(/[ \t]+/g, " ")
+
+            // Rapikan spasi di sekitar newline
+            .replace(/ *\n */g, "\n")
+
+            // Gabungkan baris menjadi satu baris
+            .replace(/\s+/g, " ")
 
             // Rapikan spasi dan baris baru
             .replace(/\s+/g, " ")
@@ -93,11 +110,11 @@ async function main() {
         const rows = data.items.map((item) => {
             const comment = item.snippet.topLevelComment.snippet.textOriginal
             return {
-                penulis: item.snippet.topLevelComment.snippet.authorDisplayName,
-                komentar_raw: comment,
-                komentar_clean: cleanseComment(comment),
-                likes: item.snippet.topLevelComment.snippet.likeCount,
-                balasan: item.snippet.totalReplyCount,
+                authorDisplayName: item.snippet.topLevelComment.snippet.authorDisplayName,
+                // komentar_raw: comment,
+                textDisplay: cleanseComment(comment),
+                likeCount: item.snippet.topLevelComment.snippet.likeCount,
+                publishedAt: item.snippet.topLevelComment.snippet.publishedAt,
             }
         });
 
