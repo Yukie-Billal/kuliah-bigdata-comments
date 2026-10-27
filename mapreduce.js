@@ -76,29 +76,65 @@ const DEFAULT_STOP_WORDS = [
   'dia', 'mereka', 'oleh', 'saat', 'dalam', 'setelah', 'sudah', 'hanya', 'ada',
   'tidak', 'bukan', 'lagi', 'pun', 'juga', 'bagaimana', 'apa', 'siapa', 'kenapa',
   'pak', 'presiden', 'pidato', 'sangat', 'terlalu', 'masih', 'cuma', 'banyak',
-  'kalau', 'bila', 'agar', 'supaya', 'secara', 'harus', 'mohon', 'tolong', 'jangan'
+  'kalau', 'bila', 'agar', 'supaya', 'secara', 'harus', 'mohon', 'tolong', 'jangan',
+  'yg', 'dgn', 'sy', 'bgt', 'aja', 'utk', 'tp', 'klo', 'klu'
 ];
 
 const DEFAULT_LEXICON_POSITIF = [
   'semoga', 'bagus', 'optimis', 'membakar', 'semangat', 'berharap', 'keren', 
   'swasembada', 'setuju', 'alhamdulillah', 'berlanjut', 'kompeten', 'berintegritas',
-  'terharu', 'bangga', 'disegani', 'kunci', 'nyata', 'mantap', 'hebat', 'tegas', 'maju'
+  'terharu', 'bangga', 'disegani', 'kunci', 'nyata', 'mantap', 'hebat', 'tegas', 
+  'maju', 'sejahtera', 'adil', 'sukses', 'amanah', 'berani', 'tercapai', 'berkualitas',
+  'apresiasi', 'mendukung', 'merakyat', 'bersih', 'solusi', 'transparan'
 ];
 
 const DEFAULT_LEXICON_NEGATIF = [
   'korupsi', 'antrean', 'panjang', 'kosong', 'sulit', 'janji', 'manis', 'dinaikkan',
   'turun', 'drastis', 'susah', 'kecewa', 'bocor', 'kebocoran', 'pungli', 'pungutan',
-  'liar', 'berbelit', 'mencekik', 'darurat', 'merusak', 'miskin', 'mahal', 'ilegal'
+  'liar', 'berbelit', 'mencekik', 'darurat', 'merusak', 'miskin', 'mahal', 'ilegal',
+  'inflasi', 'utang', 'krisis', 'phk', 'pengangguran', 'penganggur', 'suap', 'koruptor',
+  'kriminal', 'maling', 'palsu', 'gagal', 'parah', 'bohong', 'beban', 'menderita', 
+  'kejahatan', 'rusak', 'sengsara', 'rugi', 'bobrok', 'zalim', 'pesimis'
 ];
 
 const DEFAULT_POLICY_CATEGORIES = {
-  'Ekonomi & Kesejahteraan Rakyat': ['beras', 'telur', 'minyak', 'murah', 'pajak', 'ppn', 'kemiskinan', 'subsidi', 'pupuk', 'umkm', 'daya beli', 'pensiunan'],
-  'Pendidikan & Kesejahteraan Guru': ['sekolah', 'guru', 'honorer', 'pendidikan', 'makan bergizi', 'nutrisi'],
-  'Kesehatan & Penurunan Stunting': ['kesehatan', 'puskesmas', 'bpjs', 'obat', 'stunting', 'posyandu', 'hamil', 'rumah sakit'],
-  'Ketenagakerjaan & Lapangan Kerja': ['lapangan kerja', 'kerja', 'smk', 'sarjana', 'gaji', 'upah', 'pengangguran'],
-  'Hukum, Anti Korupsi & Keamanan': ['korupsi', 'hukum', 'transparansi', 'pungutan', 'pungli', 'polisi', 'kepolisian', 'judi', 'siber', 'kebocoran'],
-  'Infrastruktur & Pangan': ['infrastruktur', 'transportasi', 'kereta', 'jalan', 'logistik', 'swasembada', 'pangan', 'energi'],
-  'Diplomasi & Luar Negeri': ['diplomasi', 'perdamaian', 'dunia', 'bangsa', 'internasional']
+  'Ekonomi & Kesejahteraan Rakyat': [
+    'harga', 'sembako', 'mahal', 'inflasi', 'apbn', 'utang', 'impor', 'ekspor', 
+    'pasar', 'rupiah', 'krisis', 'bansos', 'blt', 'miskin', 'sejahtera', 'tarif', 
+    'listrik', 'bbm', 'pertalite', 'pertamax', 'gas', 'elpiji', 'melon', 'makanan', 
+    'belanja', 'ekonomi', 'keuangan', 'beras', 'telur', 'minyak', 'pajak', 'ppn'
+  ],
+  'Pendidikan & Kesejahteraan Guru': [
+    'murid', 'siswa', 'mahasiswa', 'kuliah', 'ukt', 'kampus', 'dosen', 'ppg', 
+    'p3k', 'pppk', 'kurikulum', 'beasiswa', 'pip', 'buku', 'sekolahan', 
+    'gaji guru', 'sertifikasi', 'ptn', 'gedung sekolah', 'ijazah', 'spp', 'honorer'
+  ],
+  'Kesehatan & Penurunan Stunting': [
+    'medis', 'dokter', 'perawat', 'bidan', 'gizi', 'makan gratis', 'makan siang', 
+    'busung lapar', 'penyakit', 'imunisasi', 'nakes', 'faskes', 'balita', 
+    'sanitasi', 'obat-obatan', 'layanan kesehatan', 'bpjs kesehatan', 'stunting', 'posyandu'
+  ],
+  'Ketenagakerjaan & Lapangan Kerja': [
+    'loker', 'cari kerja', 'pabrik', 'phk', 'pesangon', 'pns', 'asn', 'thr', 
+    'outsourcing', 'buruh', 'serikat', 'karir', 'lembur', 'magang', 'lowongan', 
+    'penganggur', 'tenaga kerja', 'kontrak', 'gaji', 'upah'
+  ],
+  'Hukum, Anti Korupsi & Keamanan': [
+    'kpk', 'jaksa', 'kejaksaan', 'hakim', 'pengadilan', 'penjara', 'koruptor', 
+    'suap', 'gratifikasi', 'tni', 'tentara', 'ham', 'keadilan', 'pasal', 
+    'kuhp', 'vonis', 'kriminal', 'maling', 'narkoba', 'demo', 'demonstrasi', 
+    'siber', 'kejahatan', 'polisi', 'pungli'
+  ],
+  'Infrastruktur & Pangan': [
+    'tol', 'jalan tol', 'jembatan', 'bendungan', 'irigasi', 'pertanian', 
+    'petani', 'nelayan', 'panen', 'lahan', 'ikn', 'pembangunan', 'kereta cepat', 
+    'bandara', 'pelabuhan', 'air bersih', 'pdam', 'proyek', 'pangan', 'swasembada'
+  ],
+  'Diplomasi & Luar Negeri': [
+    'palestina', 'israel', 'amerika', 'china', 'asean', 'pbb', 'luar negeri', 
+    'g20', 'ktt', 'hubungan internasional', 'asing', 'investor', 'tka', 
+    'konflik', 'perang', 'kedubes', 'gaza'
+  ]
 };
 
 // Objek kata kunci aktif (dapat diubah dinamis oleh pengguna & disimpan di localStorage)
