@@ -85,7 +85,18 @@ const DEFAULT_LEXICON_POSITIF = [
   'swasembada', 'setuju', 'alhamdulillah', 'berlanjut', 'kompeten', 'berintegritas',
   'terharu', 'bangga', 'disegani', 'kunci', 'nyata', 'mantap', 'hebat', 'tegas', 
   'maju', 'sejahtera', 'adil', 'sukses', 'amanah', 'berani', 'tercapai', 'berkualitas',
-  'apresiasi', 'mendukung', 'merakyat', 'bersih', 'solusi', 'transparan'
+  'apresiasi', 'mendukung', 'merakyat', 'bersih', 'solusi', 'transparan',
+  'mantul', 'jos', 'joss', 'top', 'terbaik', 'luar biasa', 'salut', 'dukung', 
+  'lanjutkan', 'gas', 'gaspoll', 'menyala', 'cerdas', 'bijak', 'wibawa', 
+  'berwibawa', 'visioner', 'peduli', 'ramah', 'santun', 'jujur', 'ikhlas',
+  'bukti', 'terbukti', 'berhasil', 'makmur', 'jaya', 'damai', 'aman', 'nyaman',
+  'tenang', 'stabil', 'tumbuh', 'meningkat', 'naik', 'untung', 'bermanfaat',
+  'manfaat', 'membantu', 'terbantu', 'ringan', 'mudah', 'cepat', 'tepat',
+  'akurat', 'efektif', 'efisien', 'inovatif', 'kreatif', 'solutif', 'pro',
+  'sehat', 'panjang umur', 'berkah', 'barokah', 'amin', 'aamiin', 'insyaallah', 
+  'bismillah', 'syukur', 'terima kasih', 'makasih', 'trimakasih', 'respect', 
+  'respek', 'cinta', 'sayang', 'rindu', 'idola', 'panutan', 'teladan', 'harapan',
+  'impian', 'cita', 'percaya', 'yakin', 'optimisme', 'positif', 'konstruktif'
 ];
 
 const DEFAULT_LEXICON_NEGATIF = [
@@ -94,7 +105,25 @@ const DEFAULT_LEXICON_NEGATIF = [
   'liar', 'berbelit', 'mencekik', 'darurat', 'merusak', 'miskin', 'mahal', 'ilegal',
   'inflasi', 'utang', 'krisis', 'phk', 'pengangguran', 'penganggur', 'suap', 'koruptor',
   'kriminal', 'maling', 'palsu', 'gagal', 'parah', 'bohong', 'beban', 'menderita', 
-  'kejahatan', 'rusak', 'sengsara', 'rugi', 'bobrok', 'zalim', 'pesimis'
+  'kejahatan', 'rusak', 'sengsara', 'rugi', 'bobrok', 'zalim', 'pesimis',
+  'omdo', 'omon', 'wacana', 'pencitraan', 'drama', 'dongeng', 'mimpi', 'halu', 
+  'bullshit', 'hoax', 'hoaks', 'tipu', 'menipu', 'penipu', 'ketipu', 'dusta', 
+  'ingkar', 'khianat', 'munafik', 'sandiwara', 'dagelan', 'lucu', 'kocak', 'lawak',
+  'percuma', 'sia', 'bullshit', 'basi', 'bosan', 'muak', 'capek', 'lelah', 'enek',
+  'naik', 'melonjak', 'melejit', 'cekik', 'tercekik', 'tindas', 'tertindas', 
+  ' Sengsara', 'lapar', 'kelaparan', 'haus', 'macet', 'banjir', 'polusi', 'kotor', 
+  'kumuh', 'semrawut', 'kacau', 'berantakan', 'amburadul', 'hancur', 'anjlok', 
+  'merosot', 'defisit', 'bengkak', 'membengkak', 'hutang', 'pajak', 'potongan', 
+  'lambat', 'lelet', 'lemot', 'ribet', 'dipersulit', 'birokrasi', 'nepotisme', 
+  'dinasti', 'oligarki', 'mafia', 'kartel', 'monopoli', 'serakah', 'rakus', 
+  'tamak', 'egois', 'abai', 'cuek', 'tuli', 'buta', 'tidur', 'lemah', 'loyo', 
+  'lamban', 'telat', 'terlambat', 'salah', 'keliru', 'ngawur', 'asal', 'konyol',
+  'aneh', 'miris', 'prihatin', 'sedih', 'nangis', 'menangis', 'jerit', 'menjerit',
+  'marah', 'kesal', 'geram', 'emosi', 'benci', 'tolak', 'menolak', 'protes', 
+  'demo', 'turunkan', 'mundur', 'lengser', 'pecat', 'bubarkan', 'usut', 'tangkap',
+  'penjarakan', 'hukum', 'adil', 'tidak adil', 'curang', 'kecurangan', 'manipulasi',
+  'intimidasi', 'represif', 'otoriter', 'diktator', 'feodal', 'ancaman', 'bahaya',
+  'takut', 'khawatir', 'cemas', 'resah', 'gelisah', 'bingung', 'pusing', 'stres'
 ];
 
 const DEFAULT_POLICY_CATEGORIES = {
