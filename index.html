@@ -173,9 +173,23 @@
 
           <!-- KARTU: SAMPEL KOMENTAR MENTAH & KATA KUNCI TERDETEKSI -->
           <div class="card">
-            <div class="card-title">
-              <span>Input Komentar Netizen &amp; Ekstraksi Kata Kunci</span>
-              <span class="badge">Input Dataset</span>
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <span>Input Komentar Netizen &amp; Ekstraksi Kata Kunci</span>
+                <span class="badge" style="margin-left: 0.4rem;">Input Dataset</span>
+              </div>
+
+              <!-- Dropdown Urutkan Komentar -->
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <label for="comment-sort-select" style="font-size: 0.8rem; color: #475569; font-weight: 600; margin: 0;">Urutkan:</label>
+                <select id="comment-sort-select" class="form-control" style="width: auto; padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                  <option value="default">Urutan Asli Data</option>
+                  <option value="likes-desc">Likes Terbanyak</option>
+                  <option value="likes-asc">Likesersedikit</option>
+                  <option value="date-desc">Terbaru</option>
+                  <option value="date-asc">Terlama</option>
+                </select>
+              </div>
             </div>
             <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.75rem;">
               Setiap komentar netizen di-scan oleh Mapper untuk mencocokkan kata kunci sektor kebijakan atau polaritas leksikon sentimen:

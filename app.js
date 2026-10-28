@@ -9,6 +9,7 @@ let activeChart = null;
 let currentAbortController = null;
 let currentActiveJob = 'policyEvaluation'; // Default utama: Pemetaan Sektor Evaluasi Kebijakan Publik
 let showAllComments = false;
+let currentCommentSort = 'default';
 
 document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
@@ -43,6 +44,14 @@ function setupEventListeners() {
   if (btnToggleComments) {
     btnToggleComments.addEventListener('click', () => {
       showAllComments = !showAllComments;
+      renderRawCommentsPreview(currentDataset);
+    });
+  }
+
+  const commentSortSelect = document.getElementById('comment-sort-select');
+  if (commentSortSelect) {
+    commentSortSelect.addEventListener('change', (e) => {
+      currentCommentSort = e.target.value;
       renderRawCommentsPreview(currentDataset);
     });
   }
@@ -328,12 +337,13 @@ async function fetchAllYouTubeComments({ apiKey, videoId, targetLimit, onProgres
 
   do {
     const url = new URL('https://www.googleapis.com/youtube/v3/commentThreads');
-    url.searchParams.set('part', 'snippet');
+    // Gunakan 'snippet,replies' agar komentar balasan (replies) ikut terambil!
+    url.searchParams.set('part', 'snippet,replies');
     url.searchParams.set('videoId', videoId);
     
-    const batchSize = Math.min(100, isFetchAll ? 100 : (numericLimit - allComments.length));
-    url.searchParams.set('maxResults', batchSize.toString());
-    url.searchParams.set('order', 'relevance'); // Default urutan paling relevan
+    url.searchParams.set('maxResults', '100');
+    // Gunakan 'time' saat ambil semua komentar agar YouTube tidak memotong pagination
+    url.searchParams.set('order', isFetchAll ? 'time' : 'relevance');
     url.searchParams.set('textFormat', 'plainText');
     url.searchParams.set('key', apiKey);
 
@@ -351,7 +361,31 @@ async function fetchAllYouTubeComments({ apiKey, videoId, targetLimit, onProgres
 
     const data = await response.json();
     const items = data.items || [];
-    allComments = allComments.concat(items);
+
+    items.forEach(thread => {
+      // 1. Masukkan komentar utama (Top-Level Comment)
+      allComments.push(thread);
+
+      // 2. Jika ada balasan (replies), ekstrak dan sesuaikan strukturnya 
+      // agar langsung kompatibel dengan MapReduceEngine tanpa perlu ubah mapreduce.js
+      if (thread.replies && Array.isArray(thread.replies.comments)) {
+        thread.replies.comments.forEach(reply => {
+          allComments.push({
+            id: reply.id,
+            snippet: {
+              topLevelComment: {
+                snippet: {
+                  authorDisplayName: `${reply.snippet.authorDisplayName || 'Netizen'} (Balasan)`,
+                  textDisplay: reply.snippet.textDisplay || '',
+                  likeCount: reply.snippet.likeCount || 0,
+                  publishedAt: reply.snippet.publishedAt || ''
+                }
+              }
+            }
+          });
+        });
+      }
+    });
 
     pageCount++;
     nextPageToken = data.nextPageToken || null;
@@ -405,14 +439,19 @@ async function handleFetchYouTubeComments() {
 
   // ----------------------------------------------------
   // CEK CACHE DATA LOKAL TERLEBIH DAHULU:
-  // Jika URL/ID sama, langsung gunakan data lokal tanpa memanggil API
+  // Hanya gunakan cache jika jumlah komentar di cache sudah memenuhi targetLimit
   // ----------------------------------------------------
   try {
     const cachedData = localStorage.getItem(`mr_cache_video_${videoId}`);
     if (cachedData) {
       const parsedCache = JSON.parse(cachedData);
-      if (Array.isArray(parsedCache) && parsedCache.length > 0) {
-        currentDataset = parsedCache;
+      const isFetchAll = targetLimit === 'all' || targetLimit === 0;
+      const numericLimit = isFetchAll ? Infinity : parseInt(targetLimit, 10);
+
+      // Gunakan cache HANYA jika tidak sedang memilih "Semua Komentar" 
+      // dan jumlah cache sudah >= limit yang diminta
+      if (Array.isArray(parsedCache) && parsedCache.length >= numericLimit) {
+        currentDataset = parsedCache.slice(0, numericLimit);
         if (statusEl) {
           statusEl.className = 'status-badge info';
           statusEl.textContent = `Data Video ID "${videoId}" ditemukan di cache lokal (${currentDataset.length.toLocaleString('id-ID')} komentar). Memuat langsung tanpa kuota API.`;
@@ -650,7 +689,24 @@ function renderRawCommentsPreview(data) {
 
   const selectedJobKey = currentActiveJob;
   const totalComments = data.length;
-  const displayItems = showAllComments ? data : data.slice(0, 5);
+
+  const sortedData = [...data].sort((a, b) => {
+    const sA = a.snippet?.topLevelComment?.snippet || {};
+    const sB = b.snippet?.topLevelComment?.snippet || {};
+
+    if (currentCommentSort === 'likes-desc') {
+      return (parseInt(sB.likeCount || 0, 10)) - (parseInt(sA.likeCount || 0, 10));
+    } else if (currentCommentSort === 'likes-asc') {
+      return (parseInt(sA.likeCount || 0, 10)) - (parseInt(sB.likeCount || 0, 10));
+    } else if (currentCommentSort === 'date-desc') {
+      return new Date(sB.publishedAt || 0) - new Date(sA.publishedAt || 0);
+    } else if (currentCommentSort === 'date-asc') {
+      return new Date(sA.publishedAt || 0) - new Date(sB.publishedAt || 0);
+    }
+    return 0; // 'default'
+  });
+
+  const displayItems = showAllComments ? sortedData : sortedData.slice(0, 5);
 
   displayItems.forEach((item, idx) => {
     const snippet = item.snippet?.topLevelComment?.snippet || {};

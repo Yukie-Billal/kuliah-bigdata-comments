@@ -63,6 +63,35 @@ header {
   grid-template-columns: 370px 1fr;
   gap: 1.5rem;
 }
+.dashboard-grid > main,
+.dashboard-grid > aside,
+.card,
+.raw-container {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.raw-item-card {
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.raw-item-card p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.comment-detected-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+}
 
 @media (max-width: 992px) {
   .dashboard-grid {
